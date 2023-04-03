@@ -1,0 +1,5 @@
+# ignore ALL .caffemodel files
+*.caffemodel
+# ignore ALL .prototxt files
+*.prototxt
+# ignore ALL files in ANY directory named model model/
