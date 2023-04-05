@@ -2,7 +2,10 @@ import cv2
 import sys
 import time
 import datetime
-import playsound
+from playsound import playsound
+
+
+
 
 s = 0
 if len(sys.argv) > 1:
@@ -13,11 +16,14 @@ source = cv2.VideoCapture(s)
 frame_width = int(source.get(3))
 frame_height = int(source.get(4))
 
-win_name = 'Data Collection'
-cv2.namedWindow(win_name, cv2.WINDOW_NORMAL)
-out_mp4 = cv2.VideoWriter(f'{datetime.datetime.now()}.mp4',cv2.VideoWriter_fourcc(*'XVID'), cv2.CAP_PROP_FPS, (frame_width,frame_height))
+out_mp4 = cv2.VideoWriter(f'{time.strftime("%Y%m%d-%H%M%S")}.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width,frame_height))
 
 start_time = time.time()
+
+win_name = 'Data Collection'
+cv2.namedWindow(win_name, cv2.WINDOW_NORMAL)
+
+playsound('C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/beep-beep.mp3')
 
 while cv2.waitKey(1) != 27 and time.time() - start_time <= 15: # Escape
     
@@ -25,9 +31,10 @@ while cv2.waitKey(1) != 27 and time.time() - start_time <= 15: # Escape
     if not has_frame:
         break
 
+    cv2.imshow(win_name, frame)
+    
     out_mp4.write(frame)
-    if (time.time() - start_time == 10):
-        playsound()
+    if (int(time.time() - start_time) == 10):
+        playsound('C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/beep-beep.mp3')
 
 source.release()
-cv2.destroyWindow(win_name)
