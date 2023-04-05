@@ -1,5 +1,6 @@
 import cv2
 
+filename = '20230404-232515.mp4'
 
 protoFile = "pose_deploy_linevec_faster_4_stages.prototxt"
 weightsFile = "model/pose_iter_160000.caffemodel"
@@ -10,16 +11,21 @@ POSE_PAIRS = [[0,1], [1,2], [2,3], [3,4], [1,5], [5,6], [6,7], [1,14], [14,8], [
 
 net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
 
-
 feature_params = dict( maxCorners = 500, qualityLevel = 0.2, minDistance = 15, blockSize = 9)
 
 result = None
 
+source = cv2.VideoCapture(filename)
 
-source = cv2.VideoCapture(s)
+frame_width = int(source.get(3))
+frame_height = int(source.get(4))
 
+if (source.isOpened()== False): 
+    print("Error opening video stream or file")
 
-while alive:
+out_mp4 = cv2.VideoWriter(f'{filename[:-4]}-sk.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width,frame_height))
+
+while (source.isOpened()):
     has_frame, frame = source.read()
     if not has_frame:
         break
@@ -97,15 +103,9 @@ while alive:
 
 
 
-    cv2.imshow(win_name, result)
-
-
-
-    key = cv2.waitKey(1)
-    if key == ord('Q') or key == ord('q') or key == 27:
-        alive = False
+    out_mp4.write(result)
 
 
 
 source.release()
-cv2.destroyWindow(win_name)
+out_mp4.release()
