@@ -1,13 +1,20 @@
 import cv2
+import csv
+import pandas as pd
 
-filename = '20230404-232515.mp4'
+filename = '20230405-000645.mp4'
+csv_filename = 'points.csv'
 
 protoFile = "pose_deploy_linevec_faster_4_stages.prototxt"
 weightsFile = "model/pose_iter_160000.caffemodel"
 
-
 nPoints = 15
 POSE_PAIRS = [[0,1], [1,2], [2,3], [3,4], [1,5], [5,6], [6,7], [1,14], [14,8], [8,9], [9,10], [14,11], [11,12], [12,13] ]
+
+df = pd.DataFrame(POSE_PAIRS, columns=['x', 'y'])
+
+df.to_csv('pose_pairs.csv', index=False)
+print("CSV file written successfully")
 
 net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
 
@@ -20,7 +27,7 @@ source = cv2.VideoCapture(filename)
 frame_width = int(source.get(3))
 frame_height = int(source.get(4))
 
-if (source.isOpened()== False): 
+if (source.isOpened()== False):
     print("Error opening video stream or file")
 
 out_mp4 = cv2.VideoWriter(f'{filename[:-4]}-sk.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width,frame_height))
