@@ -22,19 +22,22 @@ start_time = time.time()
 
 win_name = 'Data Collection'
 cv2.namedWindow(win_name, cv2.WINDOW_NORMAL)
-
-playsound('C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/beep-beep.mp3')
+# C:/Users/kryst/Documents/School/senior-project/assets/beep-beep.mp3
+# C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/beep-beep.mp3
+playsound('C:/Users/kryst/Documents/School/senior-project/assets/beep-beep.mp3')
 
 while cv2.waitKey(1) != 27 and time.time() - start_time <= 15: # Escape
-    
+
     has_frame, frame = source.read()
     if not has_frame:
         break
 
     cv2.imshow(win_name, frame)
-    
+
     out_mp4.write(frame)
     if (int(time.time() - start_time) == 10):
-        playsound('C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/beep-beep.mp3')
+        # C:/Users/kryst/Documents/School/senior-project/assets/beep-beep.mp3
+        # C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/beep-beep.mp3
+        playsound('C:/Users/kryst/Documents/School/senior-project/assets/beep-beep.mp3')
 
 source.release()
