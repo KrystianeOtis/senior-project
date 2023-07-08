@@ -1,7 +1,8 @@
 import cv2
 import csv
 import pandas as pd
-#frame number
+
+# Frame number
 filename = '20230405-000645.mp4'
 csv_filename = 'points.csv'
 
@@ -10,105 +11,77 @@ weightsFile = "model/pose_iter_160000.caffemodel"
 
 nPoints = 15
 POSE_PAIRS = [[0,1], [1,2], [2,3], [3,4], [1,5], [5,6], [6,7], [1,14], [14,8], [8,9], [9,10], [14,11], [11,12], [12,13] ]
-data = []
-
+x_coords = []
+y_coords = []
+waving_labels = []
 
 net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
 
-feature_params = dict( maxCorners = 500, qualityLevel = 0.2, minDistance = 15, blockSize = 9)
-
-result = None
-
 source = cv2.VideoCapture(filename)
 
-frame_width = int(source.get(3))
-frame_height = int(source.get(4))
-
-if (source.isOpened()== False):
-    print("Error opening video stream or file")
-
+frame_counter = 0
+waving = False
 
 while (source.isOpened()):
     has_frame, frame = source.read()
     if not has_frame:
         break
 
-    # im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     im = frame
     inWidth = im.shape[1]
     inHeight = im.shape[0]
-
 
     netInputSize = (368, 368)
     inpBlob = cv2.dnn.blobFromImage(im, 1.0 / 255, netInputSize, (0, 0, 0), swapRB=True, crop=False)
     net.setInput(inpBlob)
 
-
     # Forward Pass
     output = net.forward()
 
-
-    # X and Y Scale
     scaleX = inWidth / output.shape[3]
     scaleY = inHeight / output.shape[2]
-
-
 
     # Empty list to store the detected keypoints
     points = []
 
-
-
-    # Treshold 
+    # Threshold
     threshold = 0.1
 
-
-
     for i in range(nPoints):
-        # Obtain probability map
         probMap = output[0, i, :, :]
-
-        # Find global maxima of the probMap.
         minVal, prob, minLoc, point = cv2.minMaxLoc(probMap)
-
-        # Scale the point to fit on the original image
         x = scaleX * point[0]
         y = scaleY * point[1]
 
-
-
-        if prob > threshold :
-            # Add the point to the list if the probability is greater than the threshold
+        if prob > threshold:
             points.append((int(x), int(y)))
-        else :
+        else:
             points.append(None)
 
-
-
     imSkeleton = im.copy()
-
-
 
     # Draw skeleton
     for pair in POSE_PAIRS:
         partA = pair[0]
         partB = pair[1]
 
-
-
-
         if points[partA] and points[partB]:
-            for point in points:
-                data.append(point)
+            x_coords.append(points[partA][0])
+            y_coords.append(points[partA][1])
 
+            x_coords.append(points[partB][0])
+            y_coords.append(points[partB][1])
 
-    result = imSkeleton
+            waving_labels.append(waving)
 
+    # Check if waving state should be toggled
+    if frame_counter == 10:
+        waving = True
 
+    frame_counter += 1
 
-df = pd.DataFrame(data, columns=['x', 'y'])
-
-df.to_csv('pose_pairs.csv', index=False)
+df = pd.DataFrame({'x': x_coords, 'y': y_coords, 'waving': waving_labels})
+df.to_csv(csv_filename, index=False)
 print("CSV file written successfully")
 
 source.release()
