@@ -6,6 +6,7 @@ import pandas as pd
 import cv2
 import os
 import sys
+import keras
 
 # Import matplotlib libraries
 from matplotlib import pyplot as plt
@@ -437,18 +438,18 @@ def run_inference(movenet, image, crop_region, crop_size):
   return keypoints_with_scores
 
 def create_df(frame):
-    x_left_wrist = 0
-    y_left_wrist = 0
-    x_left_elbow = 0
-    y_left_elbow = 0
-    x_left_shoulder = 0
-    y_left_shoulder = 0
-    x_right_wrist = 0
-    y_right_wrist = 0
-    x_right_elbow = 0
-    y_right_elbow = 0
-    x_right_shoulder = 0
-    y_right_shoulder = 0
+    x_left_wrist = []
+    y_left_wrist = []
+    x_left_elbow = []
+    y_left_elbow = []
+    x_left_shoulder = []
+    y_left_shoulder = []
+    x_right_wrist = []
+    y_right_wrist = []
+    x_right_elbow = []
+    y_right_elbow = []
+    x_right_shoulder = []
+    y_right_shoulder = []
     body_parts = [x_left_shoulder,  y_left_shoulder, x_right_shoulder,  \
            y_right_shoulder, x_left_elbow,  y_left_elbow, x_right_elbow, \
            y_right_elbow, x_left_wrist,  y_left_wrist, x_right_wrist, \
@@ -458,9 +459,9 @@ def create_df(frame):
             body_parts[(idx - 5) * 2].append(frame[0, 0, idx, 1])
             body_parts[((idx - 5) * 2) + 1].append(frame[0, 0, idx, 0])
         else:
-            body_parts[(idx - 5) * 2].append(0)
-            body_parts[((idx - 5) * 2) + 1].append(0)
-
+            body_parts[(idx - 5) * 2].append(0.0)
+            body_parts[((idx - 5) * 2) + 1].append(0.0)
+    
     dict = {'x_left_wrist': x_left_wrist, 'y_left_wrist': y_left_wrist,
           'x_left_elbow': x_left_elbow, 'y_left_elbow': y_left_elbow,
           'x_left_shoulder': x_left_shoulder, 'y_left_shoulder': y_left_shoulder,
@@ -468,13 +469,22 @@ def create_df(frame):
           'x_right_elbow' : x_right_elbow, 'y_right_elbow' : y_right_elbow,
           'x_right_shoulder' : x_right_shoulder, 'y_right_shoulder' : y_right_shoulder}
 
-    return(pd.DataFrame(dict))
 
-# loaded_model = tf.saved_model.load('C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/')
+    return pd.DataFrame(dict)
 
-filename = "assets\saved_model.pb"
-folder = "C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/variables"
-net = cv2.dnn.readNetFromTensorflow(filename, folder)
+def create_dataset(X, step=10):
+    Xs = []
+    max_length = 0  # Track the maximum sequence length
+
+    for i in range(0, len(X), step):
+        v = X.iloc[i:(i + step)].values
+        Xs.append(v)
+        max_length = max(max_length, len(v))
+
+    return np.array(Xs)
+
+loaded_model = keras.models.load_model('C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/mymodel.h5')
+
 
 feature_params = dict( maxCorners = 500, qualityLevel = 0.2, minDistance = 15, blockSize = 9)
 
@@ -485,7 +495,6 @@ if len(sys.argv) > 1:
 alive = True
 
 column_names = [
-  'index',
   'x_left_wrist',
   'y_left_wrist',
   'x_left_elbow',
@@ -497,11 +506,10 @@ column_names = [
   'x_right_elbow',
   'y_right_elbow',
   'x_right_shoulder',
-  'y_right_shoulder',
-  'waving'
+  'y_right_shoulder'
 ]
 
-win_name = 'Skeleton Tracking'
+win_name = 'Wave Tracking'
 cv2.namedWindow(win_name, cv2.WINDOW_NORMAL)
 result = None
 
@@ -520,6 +528,8 @@ while alive:
         break
 
     if not frame_num < FRAME_LIMIT:
+        
+        # print(d)
 
         image_height, image_width, _ = frame.shape
         crop_region = init_crop_region(image_height, image_width)
@@ -529,12 +539,24 @@ while alive:
           crop_size=[input_size, input_size])
         
         df = create_df(keypoints_with_scores)
-        d = d.append(df).reset_index(drop=True).iloc[1:]
+        d = d.iloc[1:]
+        d = pd.concat([d, df], ignore_index=True)
+        # print(d.shape)
+        
+        # print(d)
 
-        net.setInput(d)
-        output = net.forward()
 
-        print(output)
+        X = create_dataset(d)
+
+        # print(X)
+
+        # net.setInput(d)
+        # output = net.forward()
+        output = loaded_model(X)
+        if (output[0][0] > output[0][1]):
+          print('not waving')
+        else:
+           print('waving')
 
         frame_num = 0
         num_frames += 1

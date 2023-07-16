@@ -1,4 +1,5 @@
 import cv2
+import keras
 import pandas as pd
 import tensorflow as tf
 import numpy as np
@@ -21,7 +22,7 @@ column_names = [
   'waving'
 ]
 
-loaded_model = tf.saved_model.load('C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/')
+loaded_model = keras.models.load_model('C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/mymodel.h5')
 d = pd.DataFrame(0.0, index=np.arange(10), columns=column_names)
 
 def create_dataset(X, step=10):
@@ -52,7 +53,7 @@ X = create_dataset(
               'x_right_shoulder', 'y_right_shoulder']]
 )
 
-X = X.astype(float)
-X = np.expand_dims(X, axis=0)
+
+print(X)
 
 print(loaded_model(X))
