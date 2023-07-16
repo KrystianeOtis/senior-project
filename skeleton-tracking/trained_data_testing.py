@@ -470,8 +470,11 @@ def create_df(frame):
 
     return(pd.DataFrame(dict))
 
-filename = "../assets/saved_model (1).pb"
-net = cv2.dnn.readNetFromTensorflow(filename)
+# loaded_model = tf.saved_model.load('C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/')
+
+filename = "assets\saved_model.pb"
+folder = "C:/Users/mosia/OneDrive/Desktop/Senior Project/senior-project/assets/variables"
+net = cv2.dnn.readNetFromTensorflow(filename, folder)
 
 feature_params = dict( maxCorners = 500, qualityLevel = 0.2, minDistance = 15, blockSize = 9)
 
@@ -550,3 +553,4 @@ while alive:
 
 source.release()
 cv2.destroyWindow(win_name)
+
